@@ -262,8 +262,9 @@ public class DConnect2 implements AutoCloseable
     private void openConnection(String urlString, Command command) throws IOException, DAP2Exception
     {
         InputStream is = null;
+
         try {
-            try (HTTPMethod method = HTTPFactory.Get(urlString)) {
+            try (HTTPMethod method = HTTPFactory.Get(_session,urlString)) {
 
                 if(acceptCompress)
                     method.setRequestHeader("Accept-Encoding", "deflate,gzip");
