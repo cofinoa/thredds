@@ -109,15 +109,10 @@ import static ucar.httpservices.HTTPSession.*;
  * the session was constructed with a specified URL, then any
  * url specified to HTTMethod (via the factory or via
  * execute()) must be "compatible" with the session URL). The
- * term "compatible" basically means that the session url, as a
- * string, must be a prefix of the specified method url.  This
+ * term "compatible" basically means that the session url's host+port
+ * is the same as that of the specified method url.  This
  * maintains the semantics of the Session but allows
  * flexibility in accessing data from the server.
- * <p/>
- * As an example, the session url might be
- * "http://motherlode.ucar.edu" and the method url might be a
- * more specific URL such as
- * http://motherlode.ucar.edu/path/file.nc.dds.
  * <p/>
  * <u>One-Shot Operation:</u>
  * A reasonably common use case is when a client
@@ -166,7 +161,7 @@ public class HTTPMethod implements AutoCloseable
     protected String legalurl = null;
     protected List<Header> headers = new ArrayList<Header>();
     protected HttpEntity content = null;
-    protected HTTPSession.Methods methodclass = null;
+    protected HTTPSession.Methods methodkind = null;
     protected HTTPMethodStream methodstream = null; // wrapper for strm
     protected boolean closed = false;
     protected HttpRequestBase request = null;
@@ -210,7 +205,7 @@ public class HTTPMethod implements AutoCloseable
         this.legalurl = url;
         this.session.addMethod(this);
 
-        this.methodclass = m;
+        this.methodkind = m;
     }
 
     protected HttpRequestBase
@@ -222,7 +217,7 @@ public class HTTPMethod implements AutoCloseable
         if(this.legalurl == null)
             throw new HTTPException("Malformed url: " + this.legalurl);
 
-        switch (this.methodclass) {
+        switch (this.methodkind) {
         case Put:
             method = new HttpPut(this.legalurl);
             break;
@@ -246,7 +241,7 @@ public class HTTPMethod implements AutoCloseable
 
     protected void setcontent(HttpRequestBase request)
     {
-        switch (this.methodclass) {
+        switch (this.methodkind) {
         case Put:
             if(this.content != null)
                 ((HttpPut) request).setEntity(this.content);
@@ -717,8 +712,8 @@ public class HTTPMethod implements AutoCloseable
     static protected boolean compatibleURL(String u1, String u2)
     {
         if(u1 == u2) return true;
-        if(u1 == null) return false;
-        if(u2 == null) return false;
+        if((u1 == null) ^ (u2 == null))
+	    return false;
 
         try {
             URL url1 = new URL(u1);

@@ -38,8 +38,7 @@ import org.apache.http.auth.AuthScope;
 import org.apache.http.util.LangUtils;
 
 import java.io.*;
-import java.net.URI;
-import java.net.URISyntaxException;
+import java.net.*;
 import java.util.Locale;
 
 
@@ -114,8 +113,8 @@ abstract public class HTTPAuthScope
     {
         if(a2 == null ^ a1 == null)
             return false;
-	if(a1 == a2)
-	    return true;
+        if(a1 == a2)
+            return true;
         // So it turns out that AuthScope#equals does not
         // test port values correctly, so we need to fix here.
         if(true) {
@@ -152,20 +151,24 @@ abstract public class HTTPAuthScope
     urlToScope(String authscheme, String surl, String[] principalp)
         throws HTTPException
     {
-        URI uri = HTTPAuthScope.decompose(surl);
-        AuthScope scope = new AuthScope(uri.getHost(),
-            uri.getPort(),
-            ANY_REALM,
-            authscheme);
-        if(principalp != null)
-            principalp[0] = uri.getUserInfo();
-        return scope;
+        try {
+            URI uri = HTTPAuthScope.decompose(surl);
+            AuthScope scope = new AuthScope(uri.getHost(),
+                uri.getPort(),
+                HTTPUtil.makerealm(uri.toURL()),
+                authscheme);
+            if(principalp != null)
+                principalp[0] = uri.getUserInfo();
+            return scope;
+        } catch (MalformedURLException mue) {
+            throw new HTTPException(mue);
+        }
     }
 
     static public boolean
     wildcardMatch(String p1, String p2)
     {
-        if((p1 == null ^ p2 == null)|| (p1 == p2))
+        if((p1 == null ^ p2 == null) || (p1 == p2))
             return true;
         return (p1.equals(p2));
     }

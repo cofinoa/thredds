@@ -102,8 +102,7 @@ import static ucar.httpservices.HTTPAuthScope.*;
  * particularly and issue for queries. Especially: ?x[0:5] is legal
  * and the square brackets need not be encoded.
  * <p/>
- * Finally, note that if the session was created with no url then all method
- * constructions must specify a url.
+ * Finally, note that a session cannot be created without a realm (host+port).
  */
 
 @NotThreadSafe
@@ -631,12 +630,18 @@ public class HTTPSession implements AutoCloseable
     //////////////////////////////////////////////////
     // Instance variables
 
+
+    // Currently, the granularity of authorization is host+port.
+    protected URL realmURL = null;
+    protected String realmScheme = null;
+    protected String realmHost = null;
+    protected int realmPort = -1;
+    protected boolean closed = false;
+
     protected AbstractHttpClient sessionClient = null;
     protected List<ucar.httpservices.HTTPMethod> methodList = new Vector<HTTPMethod>();
     protected HttpContext execcontext = null; // same instance must be used for all methods
     protected String identifier = "Session";
-    protected String legalurl = null;
-    protected boolean closed = false;
     protected Settings localsettings = new Settings();
     protected HTTPAuthStore authlocal =  HTTPAuthStore.getDefault();
     // We currently only allow the use of global interceptors
@@ -654,12 +659,22 @@ public class HTTPSession implements AutoCloseable
     public HTTPSession(String url)
         throws HTTPException
     {
+        if(url == null || url.length() == 0)
+            throw new HTTPException("HTTPSession(): empty URL not allowed");
+        // Make sure url has leading protocol
+        String[] pieces = url.split("^[a-zZ-Z0-9+.-]+:");
+        if(pieces.length == 1)
+            url = "http:" + url; // try to make it parseable
         try {
-            new URL(url);
+            URL u = new URL(url);
+            this.realmHost = u.getHost();
+            this.realmPort = u.getPort();
+            this.realmScheme = u.getProtocol();
+            u = new URL(this.realmScheme, this.realmHost, this.realmPort, "");
+            this.realmURL = u;
         } catch (MalformedURLException mue) {
             throw new HTTPException("Malformed URL: " + url, mue);
         }
-        this.legalurl = url;
         try {
             synchronized (HTTPSession.class) {
                 sessionClient = new DefaultHttpClient(connmgr);
@@ -725,7 +740,7 @@ public class HTTPSession implements AutoCloseable
 
     public String getURL()
     {
-        return this.legalurl;
+        return this.realmURL.toString();
     }
 
     public void setUserAgent(String agent)
