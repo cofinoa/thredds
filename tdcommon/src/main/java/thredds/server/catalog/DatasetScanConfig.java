@@ -82,16 +82,25 @@ public class DatasetScanConfig {
   public static class Filter {
     String regExpAttVal, wildcardAttVal;
     long lastModLimitAttVal;
-    boolean atomic, collection, includer;
+    boolean atomic, collection, includer, path;
 
     public Filter(String regExpAttVal, String wildcardAttVal, long lastModLimitAttVal, boolean atomic, boolean collection, boolean includer) {
-      this.regExpAttVal = regExpAttVal;
-      this.wildcardAttVal = wildcardAttVal;
-      this.lastModLimitAttVal = lastModLimitAttVal;
-      this.atomic = atomic;
-      this.collection = collection;
-      this.includer = includer;
-    }
+        this.regExpAttVal = regExpAttVal;
+        this.wildcardAttVal = wildcardAttVal;
+        this.lastModLimitAttVal = lastModLimitAttVal;
+        this.atomic = atomic;
+        this.collection = collection;
+        this.includer = includer;
+      }
+    public Filter(String regExpAttVal, String wildcardAttVal, long lastModLimitAttVal, boolean atomic, boolean collection, boolean includer, boolean path) {
+        this.regExpAttVal = regExpAttVal;
+        this.wildcardAttVal = wildcardAttVal;
+        this.lastModLimitAttVal = lastModLimitAttVal;
+        this.atomic = atomic;
+        this.collection = collection;
+        this.includer = includer;
+        this.path = path;
+      }
   }
 
   public static class Namer {

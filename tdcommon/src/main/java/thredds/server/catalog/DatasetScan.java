@@ -44,6 +44,7 @@ import thredds.inventory.filter.CompositeMFileFilter;
 import thredds.inventory.filter.LastModifiedLimit;
 import thredds.inventory.filter.RegExpMatchOnName;
 import thredds.inventory.filter.WildcardMatchOnName;
+import thredds.inventory.filter.WildcardMatchOnPath;
 import ucar.nc2.time.CalendarDate;
 import ucar.nc2.units.DateRange;
 import ucar.nc2.units.DateType;
@@ -124,10 +125,17 @@ public class DatasetScan extends CatalogRef {
   private void makeFilter(DatasetScanConfig.Filter cfilter) {
     MFileFilter filter;
     if (cfilter.wildcardAttVal != null) {
-      filter = new WildcardMatchOnName(cfilter.wildcardAttVal);   // always on name, not path
-
+      if(cfilter.path) {
+    	filter = new WildcardMatchOnPath(cfilter.wildcardAttVal);
+      } else {
+        filter = new WildcardMatchOnName(cfilter.wildcardAttVal);   // always on name, not path
+      }
     } else if (cfilter.regExpAttVal != null) {
-      filter = new RegExpMatchOnName(cfilter.regExpAttVal);
+      if(cfilter.path) {
+        filter = new RegExpMatchOnPath(cfilter.regExpAttVal);
+      }else {
+        filter = new RegExpMatchOnName(cfilter.regExpAttVal);
+      }
 
     } else if (cfilter.lastModLimitAttVal > 0) {
       filter = new LastModifiedLimit(cfilter.lastModLimitAttVal);
