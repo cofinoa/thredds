@@ -59,7 +59,9 @@ public abstract class Grib2Pds {
       case 30:
         return new Grib2Pds30(input);
       case 31:
-        return new Grib2Pds31(input);
+          return new Grib2Pds31(input);
+      case 32:
+          return new Grib2Pds32(input);
       case 48:
           return new Grib2Pds48(input);
       case 61:
@@ -1327,76 +1329,185 @@ public abstract class Grib2Pds {
     public double value; // value of central wave number of band nb (units: m**-1)
   }
 
-    //////////////////////////////////////////////////////////////////////////////////////////////
+  //////////////////////////////////////////////////////////////////////////////////////////////
 
-    /**
-     * Product definition template 4.31 - satellite product
-     */
-    static private class Grib2Pds31 extends Grib2Pds {
+  /**
+   * Product definition template 4.31 - satellite product
+   */
+  static private class Grib2Pds31 extends Grib2Pds {
 
-        static int octetsPerBand = 11;
+      static int octetsPerBand = 11;
 
-        Grib2Pds31(byte[] input) {
-            super(input);
-        }
+      Grib2Pds31(byte[] input) {
+          super(input);
+      }
 
-        // LOOK - could put this into a dummy superclass in case others need
+      // LOOK - could put this into a dummy superclass in case others need
 
-        @Override
-        public int getTimeUnit() {
-            return 0;
-        }
+      @Override
+      public int getTimeUnit() {
+          return 0;
+      }
 
-        @Override
-        public int getForecastTime() {
-            return 0;
-        }
+      @Override
+      public int getForecastTime() {
+          return 0;
+      }
 
-        /**
-         * Observation generating process identifier (defined by originating centre)
-         *
-         * @return GenProcess
-         */
-        public int getGenProcessId() {
-            return getOctet(13);
-        }
+      /**
+       * Observation generating process identifier (defined by originating centre)
+       *
+       * @return GenProcess
+       */
+      public int getGenProcessId() {
+          return getOctet(13);
+      }
 
-        /**
-         * Number of contributing spectral bands (NB)
-         *
-         * @return Number of contributing spectral
-         */
-        public int getNumSatelliteBands() {
-            return getOctet(14);
-        }
+      /**
+       * Number of contributing spectral bands (NB)
+       *
+       * @return Number of contributing spectral
+       */
+      public int getNumSatelliteBands() {
+          return getOctet(14);
+      }
 
-        /**
-         * SatelliteBand
-         *
-         * @return SatelliteBands
-         */
-        public SatelliteBand[] getSatelliteBands() {
-            int nb = getNumSatelliteBands();
-            SatelliteBand[] result = new SatelliteBand[nb];
-            int pos = 15;
-            for (int i = 0; i < nb; i++) {
-                SatelliteBand sb = new SatelliteBand();
-                sb.number = GribNumbers.int2(getOctet(pos), getOctet(pos + 1));
-                sb.series = GribNumbers.int2(getOctet(pos + 2), getOctet(pos + 3));
-                sb.instrumentType = GribNumbers.int2(getOctet(pos + 4), getOctet(pos + 5));
-                int scaleFactor = getOctetSigned(pos + 6);
-                int svalue = GribNumbers.int4(getOctet(pos + 7), getOctet(pos + 8), getOctet(pos + 9), getOctet(pos +  10));
-                sb.value = applyScaleFactor(scaleFactor, svalue);
-                pos += octetsPerBand;
-                result[i] = sb;
-            }
-            return result;
-        }
+      /**
+       * SatelliteBand
+       *
+       * @return SatelliteBands
+       */
+      public SatelliteBand[] getSatelliteBands() {
+          int nb = getNumSatelliteBands();
+          SatelliteBand[] result = new SatelliteBand[nb];
+          int pos = 15;
+          for (int i = 0; i < nb; i++) {
+              SatelliteBand sb = new SatelliteBand();
+              sb.number = GribNumbers.int2(getOctet(pos), getOctet(pos + 1));
+              sb.series = GribNumbers.int2(getOctet(pos + 2), getOctet(pos + 3));
+              sb.instrumentType = GribNumbers.int2(getOctet(pos + 4), getOctet(pos + 5));
+              int scaleFactor = getOctetSigned(pos + 6);
+              int svalue = GribNumbers.int4(getOctet(pos + 7), getOctet(pos + 8), getOctet(pos + 9), getOctet(pos +  10));
+              sb.value = applyScaleFactor(scaleFactor, svalue);
+              pos += octetsPerBand;
+              result[i] = sb;
+          }
+          return result;
+      }
 
-        public int templateLength() {
-            return 14 + getNumSatelliteBands() * octetsPerBand;
-        }
-    }
+      public int templateLength() {
+          return 14 + getNumSatelliteBands() * octetsPerBand;
+      }
+  }
+
+  //////////////////////////////////////////////////////////////////////////////////////////////
+
+  /**
+   * Product definition template 4.32 - Analysis or Forecast at a horizontal level or in a horizontal 
+   * layer at a point in time for simulated (synthetic) satellite data
+   * 
+   */
+  static private class Grib2Pds32 extends Grib2Pds {
+
+      static int octetsPerBand = 11;
+
+      Grib2Pds32(byte[] input) {
+          super(input);
+      }
+
+      /**
+       * Background generating process identifier (defined by originating centre)
+       *
+       * @return Background generating process id
+       */
+      @Override
+      public int getBackProcessId() {
+        return getOctet(13);
+      }
+
+      public int getGenProcessId() {
+        return getOctet(14);
+      }
+
+      /**
+       * Hours after reference time of data cutoff
+       *
+       * @return HoursAfter
+       */
+      public int getHoursAfterCutoff() {
+        return GribNumbers.int2(getOctet(15), getOctet(16));
+      }
+
+      /**
+       * Minutes after reference time of data cutoff
+       *
+       * @return MinutesAfter
+       */
+      public int getMinutesAfterCutoff() {
+        return getOctet(17);
+      }
+
+      /**
+       * Indicator of unit of time range (see Code table 4.4)
+       *
+       * @return TimeRangeUnit
+       */
+      @Override
+      public int getTimeUnit() {
+        return getOctet(18);
+      }
+
+      /**
+       * Number of contributing spectral bands (NB)
+       *
+       * @return Number of contributing spectral
+       */
+      public int getNumSatelliteBands() {
+          return getOctet(23);
+      }
+      
+      @Override
+      public int getLevelType1() {
+    	  return GribNumbers.int4(getOctet(26), getOctet(27),getOctet(28), getOctet(29));
+      }
+
+      @Override
+      public int getLevelScale1() {
+        return getOctet(30);
+      }
+
+      @Override
+      public double getLevelValue1() {
+        return getScaledValue(30);
+      }
+
+      /**
+       * SatelliteBand
+       *
+       * @return SatelliteBands
+       */
+      public SatelliteBand[] getSatelliteBands() {
+          int nb = getNumSatelliteBands();
+          SatelliteBand[] result = new SatelliteBand[nb];
+          int pos = 23;
+          for (int i = 0; i < nb; i++) {
+              SatelliteBand sb = new SatelliteBand();
+              sb.number = GribNumbers.int2(getOctet(pos), getOctet(pos + 1));
+              sb.series = GribNumbers.int2(getOctet(pos + 2), getOctet(pos + 3));
+              sb.instrumentType = GribNumbers.int2(getOctet(pos + 4), getOctet(pos + 5));
+              int scaleFactor = getOctetSigned(pos + 6);
+              int svalue = GribNumbers.int4(getOctet(pos + 7), getOctet(pos + 8), getOctet(pos + 9), getOctet(pos +  10));
+              sb.value = applyScaleFactor(scaleFactor, svalue);
+              pos += octetsPerBand;
+              result[i] = sb;
+          }
+          return result;
+      }
+
+      public int templateLength() {
+          return 23 + getNumSatelliteBands() * octetsPerBand;
+      }
+  }
 
     ///////////////////////////////////////////////////////////////////////////////
 
