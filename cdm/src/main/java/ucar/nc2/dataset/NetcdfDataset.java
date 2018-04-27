@@ -165,8 +165,30 @@ public class NetcdfDataset extends ucar.nc2.NetcdfFile {
   static public Set<Enhance> parseEnhanceMode(String enhanceMode) {
     if (enhanceMode == null) return null;
 
-    Set<Enhance> mode = null;
-
+    Set<Enhance> mode = EnhanceNone;
+    
+    for(String sMode: enhanceMode.split("|")) {
+    	sMode=sMode.trim();
+    	if(sMode.equalsIgnoreCase("true") || sMode.equalsIgnoreCase("All")) {
+    		mode.add(Enhance.ScaleMissing);
+    		mode.add(Enhance.CoordSystems);
+    		mode.add(Enhance.ConvertEnums);
+    	} else if(sMode.equalsIgnoreCase("AllDefer")) {
+    		mode.add(Enhance.ScaleMissingDefer);
+    		mode.add(Enhance.CoordSystems);
+    		mode.add(Enhance.ConvertEnums);
+    	} else if (sMode.equalsIgnoreCase("ScaleMissing")) {
+    		mode.add(Enhance.ScaleMissing);
+    	} else if (sMode.equalsIgnoreCase("ScaleMissingDefer")) {
+    		mode.add(Enhance.ScaleMissingDefer);
+    	} else if (sMode.equalsIgnoreCase("CoordSystems")) {
+    		mode.add(Enhance.CoordSystems);
+    	} else if (sMode.equalsIgnoreCase("ConvertEnums")) {
+    		mode.add(Enhance.ConvertEnums);
+    	}
+    	    
+    }
+    /*
     if (enhanceMode.equalsIgnoreCase("true") || enhanceMode.equalsIgnoreCase("All")) {
       mode = getEnhanceAll();
     } else if (enhanceMode.equalsIgnoreCase("AllDefer")) {
@@ -180,8 +202,12 @@ public class NetcdfDataset extends ucar.nc2.NetcdfFile {
     } else if (enhanceMode.equalsIgnoreCase("ConvertEnums")) {
       mode = EnumSet.of(Enhance.ConvertEnums);
     }
-
-    return mode;
+    */
+    if(mode.isEmpty()) {
+    	return null;
+    }else{
+    	return mode;
+    }
   }
 
   static protected boolean useNaNs = true;
